@@ -1,0 +1,44 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mvc-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mvc
+  template:
+    metadata:
+      labels:
+        app: mvc
+    spec:
+      containers:
+      - name: mvc
+        image: walidh/products-store-mvc:v1.0
+        ports:
+        - containerPort: 80
+        env:
+          - name: ConnectionStrings__ProductsContext
+            valuefrom:
+              secretKeyRef:
+                name: mssql-secret
+                key: db-connection-string-secret
+#              configMapKeyRef:
+#                name: mssql-connection-configMap 
+#                key: db-connection-string
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mvc-service
+spec:
+  selector:
+    app.kubernetes.io/name: mvc
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30100
+  type: NodePort
